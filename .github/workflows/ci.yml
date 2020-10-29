@@ -73,13 +73,20 @@ jobs:
             enabled: true
             timeout: 60
             cflags: '-Werror -Wno-cpp'
-          - name: macos-clang-tests
+          - name: macos-acr-clang-tests
             os: macos-latest
             build_system: acr
             compiler: clang
             run_tests: true
             enabled: true
             timeout: 60
+          - name: macos-meson-clang-tests
+            os: macos-latest
+            build_system: meson
+            compiler: clang
+            run_tests: true
+            enabled: true
+            timeout: 60 
           - name: linux-gcc-tests-asan
             os: ubuntu-20.04
             build_system: meson
