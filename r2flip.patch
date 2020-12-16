@@ -1,0 +1,549 @@
+diff --git a/libr/bp/bp.c b/libr/bp/bp.c
+index 7fbe46f51..9a5202e30 100644
+--- a/libr/bp/bp.c
++++ b/libr/bp/bp.c
+@@ -88,11 +88,19 @@ repeat:
+ 	return 0;
+ }
+ 
+-R_API RBreakpointItem *r_bp_get_at(RBreakpoint *bp, ut64 addr) {
++static inline bool containsPid(RBreakpointItem *b, int pid) {
++	for (int i = 0; i < R_BP_MAXPIDS; i++) {
++		if (b->pids[i] == 0) return false;
++		if (b->pids[i] == pid) return true;
++	}
++	return false;
++}
++
++R_API RBreakpointItem *r_bp_get_at(RBreakpoint *bp, ut64 addr, int pid) {
+ 	RListIter *iter;
+ 	RBreakpointItem *b;
+ 	r_list_foreach(bp->bps, iter, b) {
+-		if (b->addr == addr) {
++		if (b->addr == addr && containsPid(b, pid)) {
+ 			return b;
+ 		}
+ 	}
+@@ -107,21 +115,21 @@ static inline bool matchProt(RBreakpointItem *b, int perm) {
+ 	return (!perm || (perm && b->perm));
+ }
+ 
+-R_API RBreakpointItem *r_bp_get_in(RBreakpoint *bp, ut64 addr, int perm) {
++R_API RBreakpointItem *r_bp_get_in(RBreakpoint *bp, ut64 addr, int pid, int perm) {
+ 	RBreakpointItem *b;
+ 	RListIter *iter;
+ 	r_list_foreach (bp->bps, iter, b) {
+ 		// eprintf ("---ataddr--- 0x%08"PFMT64x" %d %d %x\n", b->addr, b->size, b->recoil, b->perm);
+ 		// Check addr within range and provided perm matches (or null)
+-		if (inRange (b, addr) && matchProt (b, perm)) {
++		if (inRange (b, addr) && containsPid(b, pid) && matchProt (b, perm)) {
+ 			return b;
+ 		}
+ 	}
+ 	return NULL;
+ }
+ 
+-R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int set, int count) {
+-	RBreakpointItem *b = r_bp_get_in (bp, addr, 0);
++R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int pid, int set, int count) {
++	RBreakpointItem *b = r_bp_get_in (bp, addr, pid, 0);
+ 	if (b) {
+ 		b->enabled = set;
+ 		b->togglehits = count;
+@@ -155,13 +163,13 @@ static void unlinkBreakpoint(RBreakpoint *bp, RBreakpointItem *b) {
+ }
+ 
+ /* TODO: detect overlapping of breakpoints */
+-static RBreakpointItem *r_bp_add(RBreakpoint *bp, const ut8 *obytes, ut64 addr, int size, int hw, int perm) {
++static RBreakpointItem *r_bp_add(RBreakpoint *bp, const ut8 *obytes, ut64 addr, int pid, int size, int hw, int perm) {
+ 	int ret;
+ 	RBreakpointItem *b;
+ 	if (addr == UT64_MAX || size < 1) {
+ 		return NULL;
+ 	}
+-	if (r_bp_get_in (bp, addr, perm)) {
++	if (r_bp_get_in (bp, addr, pid, perm)) {
+ 		eprintf ("Breakpoint already set at this address.\n");
+ 		return NULL;
+ 	}
+@@ -178,6 +186,7 @@ static RBreakpointItem *r_bp_add(RBreakpoint *bp, const ut8 *obytes, ut64 addr,
+ 	b->enabled = true;
+ 	b->perm = perm;
+ 	b->hw = hw;
++	b->pids[0] = pid;
+ 	// NOTE: for hw breakpoints there are no bytes to save/restore
+ 	if (!hw) {
+ 		b->bbytes = calloc (size + 16, 1);
+@@ -213,7 +222,7 @@ R_API int r_bp_add_fault(RBreakpoint *bp, ut64 addr, int size, int perm) {
+ 	return false;
+ }
+ 
+-R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int size, int perm) {
++R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm) {
+ 	RBreakpointItem *item;
+ 	ut8 *bytes;
+ 	if (size < 1) {
+@@ -226,13 +235,13 @@ R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int size, int per
+ 	if (bp->iob.read_at) {
+ 		bp->iob.read_at (bp->iob.io, addr, bytes, size);
+ 	}
+-	item = r_bp_add (bp, bytes, addr, size, R_BP_TYPE_SW, perm);
++	item = r_bp_add (bp, bytes, addr, pid, size, R_BP_TYPE_SW, perm);
+ 	free (bytes);
+ 	return item;
+ }
+ 
+-R_API RBreakpointItem* r_bp_add_hw(RBreakpoint *bp, ut64 addr, int size, int perm) {
+-	return r_bp_add (bp, NULL, addr, size, R_BP_TYPE_HW, perm);
++R_API RBreakpointItem* r_bp_add_hw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm) {
++	return r_bp_add (bp, NULL, addr, pid, size, R_BP_TYPE_HW, perm);
+ }
+ 
+ R_API int r_bp_del_all(RBreakpoint *bp) {
+@@ -247,6 +256,7 @@ R_API int r_bp_del_all(RBreakpoint *bp) {
+ 	return false;
+ }
+ 
++// TODO: Also consider perm and pid
+ R_API int r_bp_del(RBreakpoint *bp, ut64 addr) {
+ 	RListIter *iter;
+ 	RBreakpointItem *b;
+@@ -261,8 +271,8 @@ R_API int r_bp_del(RBreakpoint *bp, ut64 addr) {
+ 	return false;
+ }
+ 
+-R_API int r_bp_set_trace(RBreakpoint *bp, ut64 addr, int set) {
+-	RBreakpointItem *b = r_bp_get_in (bp, addr, 0);
++R_API int r_bp_set_trace(RBreakpoint *bp, ut64 addr, int pid, int set) {
++	RBreakpointItem *b = r_bp_get_in (bp, addr, pid, 0);
+ 	if (b) {
+ 		b->trace = set;
+ 		return true;
+diff --git a/libr/bp/bp_watch.c b/libr/bp/bp_watch.c
+index ca126d2b5..8f41af20c 100644
+--- a/libr/bp/bp_watch.c
++++ b/libr/bp/bp_watch.c
+@@ -8,12 +8,12 @@ static void r_bp_watch_add_hw(RBreakpoint *bp, RBreakpointItem *b) {
+ 	}
+ }
+ 
+-R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int size, int hw, int perm) {
++R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int pid, int size, int hw, int perm) {
+ 	RBreakpointItem *b;
+ 	if (addr == UT64_MAX || size < 1) {
+ 		return NULL;
+ 	}
+-	if (r_bp_get_in (bp, addr, perm)) {
++	if (r_bp_get_in (bp, addr, pid, perm)) {
+ 		eprintf ("Breakpoint already set at this address.\n");
+ 		return NULL;
+ 	}
+@@ -23,6 +23,7 @@ R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int size, int
+ 	b->enabled = true;
+ 	b->perm = perm;
+ 	b->hw = hw;
++	b->pids[0] = pid;
+ 	if (hw) {
+ 		r_bp_watch_add_hw (bp, b);
+ 	} else {
+diff --git a/libr/core/cfile.c b/libr/core/cfile.c
+index 25b9f8b8f..0860bf14a 100644
+--- a/libr/core/cfile.c
++++ b/libr/core/cfile.c
+@@ -326,7 +326,7 @@ static bool setbpint(RCore *r, const char *mode, const char *sym) {
+ 	if (!fi) {
+ 		return false;
+ 	}
+-	bp = r_bp_add_sw (r->dbg->bp, fi->offset, 1, R_BP_PROT_EXEC);
++	bp = r_bp_add_sw (r->dbg->bp, fi->offset, r->dbg->pid, 1, R_BP_PROT_EXEC);
+ 	if (bp) {
+ 		bp->internal = true;
+ #if __linux__
+diff --git a/libr/core/cmd_anal.c b/libr/core/cmd_anal.c
+index 16500ebad..f777d376f 100644
+--- a/libr/core/cmd_anal.c
++++ b/libr/core/cmd_anal.c
+@@ -1118,7 +1118,7 @@ static void cmd_afvx(RCore *core, RAnalFunction *fcn, bool json) {
+ 		list_vars (core, fcn, pj, 'R', NULL);
+ 		if (json) {
+ 			pj_k (pj, "writes");
+-		} else {	
++		} else {
+ 			r_cons_printf ("afvW\n");
+ 		}
+ 		list_vars (core, fcn, pj, 'W', NULL);
+@@ -1319,14 +1319,14 @@ static int var_cmd(RCore *core, const char *str) {
+ 			PJ *pj = NULL;
+ 			if (str[1] == 'j') {
+ 				pj = pj_new ();
+-			} 
++			}
+ 			list_vars (core, fcn, pj, str[0], name);
+ 			if (str[1] == 'j') {
+ 				pj_end (pj);
+ 				char *j = pj_drain (pj);
+ 				r_cons_printf ("%s\n", j);
+ 				free (j);
+-			} 
++			}
+ 			return true;
+ 		} else {
+ 			eprintf ("afv: Cannot find function in 0x%08"PFMT64x"\n", core->offset);
+@@ -2299,7 +2299,7 @@ static void anal_bb_list(RCore *core, const char *input) {
+ 		r_table_add_column (table, s, "calls", 0);
+ 		r_table_add_column (table, s, "xrefs", 0);
+ 	}
+-	
++
+ 	r_rbtree_foreach (core->anal->bb_tree, iter, block, RAnalBlock, _rb) {
+ 		RList *xrefs = get_xrefs (block);
+ 		RList *calls = get_calls (block);
+@@ -5075,7 +5075,7 @@ repeat:
+ 		}
+ 	}
+ 	// check breakpoints
+-	if (r_bp_get_at (core->dbg->bp, pc)) {
++	if (r_bp_get_at (core->dbg->bp, pc, core->dbg->pid)) {
+ 		r_cons_printf ("[ESIL] hit breakpoint at 0x%"PFMT64x "\n", pc);
+ 		return_tail (0);
+ 	}
+diff --git a/libr/core/cmd_debug.c b/libr/core/cmd_debug.c
+index 1b60645e1..27c92217f 100644
+--- a/libr/core/cmd_debug.c
++++ b/libr/core/cmd_debug.c
+@@ -3371,7 +3371,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 				eprintf ("Unable to add breakpoint (%s)\n", input + 2);
+ 			}
+ 		} else {
+-			bpi = r_bp_get_at (core->dbg->bp, core->offset);
++			bpi = r_bp_get_at (core->dbg->bp, core->offset, core->dbg->pid);
+ 			if (bpi) {
+ 				r_cons_printf ("breakpoint %s %s %s\n",
+ 						r_str_rwx_i (bpi->perm),
+@@ -3405,7 +3405,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 			if (addr == UT64_MAX) {
+ 				addr = core->offset;
+ 			}
+-			bpi = r_bp_get_at (core->dbg->bp, addr);
++			bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 			if (bpi) {
+ 				free (bpi->expr);
+ 				bpi->expr = strdup (input + 3);
+@@ -3435,7 +3435,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 			}
+ 			if (*p == '*') {
+ 				r_bp_set_trace_all (core->dbg->bp,true);
+-			} else if (!r_bp_set_trace (core->dbg->bp, addr, true)) {
++			} else if (!r_bp_set_trace (core->dbg->bp, addr, core->dbg->pid, true)) {
+ 				eprintf ("Cannot set tracepoint\n");
+ 			}
+ 			break;
+@@ -3445,12 +3445,12 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 			}
+ 			if (*p == '*') {
+ 				r_bp_set_trace_all (core->dbg->bp, false);
+-			} else if (!r_bp_set_trace (core->dbg->bp, addr, false)) {
++			} else if (!r_bp_set_trace (core->dbg->bp, addr, core->dbg->pid, false)) {
+ 				eprintf ("Cannot unset tracepoint\n");
+ 			}
+ 			break;
+ 		case 's': // "dbts"
+-			bpi = r_bp_get_at (core->dbg->bp, addr);
++			bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 			if (bpi) {
+ 				bpi->trace = !!!bpi->trace;
+ 			} else {
+@@ -3615,7 +3615,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 				if (arg) {
+ 					*arg++ = 0;
+ 					addr = r_num_math (core->num, inp);
+-					bpi = r_bp_get_at (core->dbg->bp, addr);
++					bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 					if (bpi) {
+ 						free (bpi->data);
+ 						bpi->data = strdup (arg);
+@@ -3641,7 +3641,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 				if (arg) {
+ 					*arg++ = 0;
+ 					addr = r_num_math (core->num, inp);
+-					bpi = r_bp_get_at (core->dbg->bp, addr);
++					bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 					if (bpi) {
+ 						free (bpi->cond);
+ 						bpi->cond = strdup (arg);
+@@ -3661,7 +3661,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 		break;
+ 	case 's': // "dbs"
+ 		addr = r_num_math (core->num, input + 2);
+-		bpi = r_bp_get_at (core->dbg->bp, addr);
++		bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 		if (bpi) {
+ 			//bp->enabled = !bp->enabled;
+ 			// XXX(jjd): this ^^ is what I would think toggling means...
+@@ -3673,10 +3673,10 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 				eprintf ("Cannot set breakpoint (%s)\n", input + 2);
+ 			}
+ 		}
+-		r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), true, 0);
++		r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, true, 0);
+ 		break;
+ 	case 'n': // "dbn"
+-		bpi = r_bp_get_at (core->dbg->bp, core->offset);
++		bpi = r_bp_get_at (core->dbg->bp, core->offset, core->dbg->pid);
+ 		if (input[2] == ' ') {
+ 			if (bpi) {
+ 				free (bpi->name);
+@@ -3696,7 +3696,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 		if (*p == '*') r_bp_enable_all (core->dbg->bp,true);
+ 		else {
+ 			for (; *p && *p != ' '; p++);
+-			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), true, r_num_math (core->num, p));
++			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, true, r_num_math (core->num, p));
+ 		}
+ 		break;
+ 	case 'd': // "dbd"
+@@ -3704,7 +3704,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
+ 		if (*p == '*') r_bp_enable_all (core->dbg->bp, false);
+ 		else {
+ 			for (; *p && *p != ' '; p++);
+-			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), false, r_num_math (core->num, p));
++			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, false, r_num_math (core->num, p));
+ 		}
+ 		break;
+ 	case 'h': // "dbh"
+@@ -4316,7 +4316,7 @@ static bool cmd_dcu (RCore *core, const char *input) {
+ 		}
+ 		eprintf ("Continue until 0x%08"PFMT64x" using %d bpsize\n", addr, core->dbg->bpsize);
+ 		r_reg_arena_swap (core->dbg->reg, true);
+-		if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->bpsize, R_BP_PROT_EXEC)) {
++		if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->pid, core->dbg->bpsize, R_BP_PROT_EXEC)) {
+ 			if (r_debug_is_dead (core->dbg)) {
+ 				eprintf ("Cannot continue, run ood?\n");
+ 			} else {
+@@ -4586,7 +4586,7 @@ static int cmd_debug_step (RCore *core, const char *input) {
+ 		{
+ 			char delb[128] = R_EMPTY;
+ 			addr = r_debug_reg_get (core->dbg, "PC");
+-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr);
++			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 			sprintf(delb, "db 0x%"PFMT64x"", addr);
+ 			r_reg_arena_swap (core->dbg->reg, true);
+ 			for (i = 0; i < times; i++) {
+@@ -4617,7 +4617,7 @@ static int cmd_debug_step (RCore *core, const char *input) {
+ 			if (r_config_get_i (core->config, "cfg.debug")) {
+ 				char delb[128] = R_EMPTY;
+ 				addr = r_debug_reg_get (core->dbg, "PC");
+-				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr);
++				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
+ 				sprintf(delb, "db 0x%"PFMT64x"", addr);
+ 				r_bp_del (core->dbg->bp, addr);
+ 				r_reg_arena_swap (core->dbg->reg, true);
+diff --git a/libr/core/disasm.c b/libr/core/disasm.c
+index 030df4d0b..b8cab48c1 100644
+--- a/libr/core/disasm.c
++++ b/libr/core/disasm.c
+@@ -1581,7 +1581,7 @@ static void ds_print_show_cursor(RDisasmState *ds) {
+ 	int q = core->print->cur_enabled &&
+ 		ds->cursor >= ds->index &&
+ 		ds->cursor < (ds->index + ds->asmop.size);
+-	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at);
++	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at, core->dbg->pid);
+ 	if (ds->midflags) {
+ 		(void)handleMidFlags (core, ds, false);
+ 	}
+@@ -2240,7 +2240,7 @@ static void ds_show_flags(RDisasmState *ds) {
+ 			if (case_current == case_prev + 1 && switch_addr == saddr) {
+ 				case_prev = case_current;
+ 				if (iter != uniqlist->tail) {
+-					continue;	
++					continue;
+ 				}
+ 			}
+ 		}
+diff --git a/libr/debug/debug.c b/libr/debug/debug.c
+index c2a33421f..d98f428e6 100644
+--- a/libr/debug/debug.c
++++ b/libr/debug/debug.c
+@@ -93,7 +93,7 @@ static int r_debug_bp_hit(RDebug *dbg, RRegItem *pc_ri, ut64 pc, RBreakpointItem
+ 	/* The MIPS ptrace has a different behaviour */
+ # if __mips__
+ 	/* see if we really have a breakpoint here... */
+-	b = r_bp_get_at (dbg->bp, pc);
++	b = r_bp_get_at (dbg->bp, pc, dbg->pid);
+ 	if (!b) { /* we don't. nothing left to do */
+ 		return true;
+ 	}
+@@ -101,10 +101,10 @@ static int r_debug_bp_hit(RDebug *dbg, RRegItem *pc_ri, ut64 pc, RBreakpointItem
+ 	int pc_off = dbg->bpsize;
+ 	/* see if we really have a breakpoint here... */
+ 	if (!dbg->pc_at_bp_set) {
+-		b = r_bp_get_at (dbg->bp, pc - dbg->bpsize);
++		b = r_bp_get_at (dbg->bp, pc - dbg->bpsize, dbg->pid);
+ 		if (!b) { /* we don't. nothing left to do */
+ 			/* Some targets set pc to breakpoint */
+-			b = r_bp_get_at (dbg->bp, pc);
++			b = r_bp_get_at (dbg->bp, pc, dbg->pid);
+ 			if (!b) {
+ 				/* handle the case of hw breakpoints - notify the user */
+ 				int drx_reg_idx = r_debug_drx_at (dbg, pc);
+@@ -131,19 +131,19 @@ static int r_debug_bp_hit(RDebug *dbg, RRegItem *pc_ri, ut64 pc, RBreakpointItem
+ 
+ 	if (dbg->pc_at_bp) {
+ 		pc_off = 0;
+-		b = r_bp_get_at (dbg->bp, pc);
++		b = r_bp_get_at (dbg->bp, pc, dbg->pid);
+ 	} else {
+-		b = r_bp_get_at (dbg->bp, pc - dbg->bpsize);
++		b = r_bp_get_at (dbg->bp, pc - dbg->bpsize, dbg->pid);
+ 	}
+ 
+ 	if (!b) {
+ 		return true;
+ 	}
+ 
+-	b = r_bp_get_at (dbg->bp, pc - dbg->bpsize);
++	b = r_bp_get_at (dbg->bp, pc - dbg->bpsize, dbg->pid);
+ 	if (!b) { /* we don't. nothing left to do */
+ 		/* Some targets set pc to breakpoint */
+-		b = r_bp_get_at (dbg->bp, pc);
++		b = r_bp_get_at (dbg->bp, pc, dbg->pid);
+ 		if (!b) {
+ 			return true;
+ 		}
+@@ -323,11 +323,11 @@ R_API RBreakpointItem *r_debug_bp_add(RDebug *dbg, ut64 addr, int hw, bool watch
+ 	}
+ 	if (watch) {
+ 		hw = 1; //XXX
+-		bpi = r_bp_watch_add (dbg->bp, addr, bpsz, hw, rw);
++		bpi = r_bp_watch_add (dbg->bp, addr, dbg->pid, bpsz, hw, rw);
+ 	} else {
+ 		bpi = hw
+-			? r_bp_add_hw (dbg->bp, addr, bpsz, R_BP_PROT_EXEC)
+-			: r_bp_add_sw (dbg->bp, addr, bpsz, R_BP_PROT_EXEC);
++			? r_bp_add_hw (dbg->bp, addr, dbg->pid, bpsz, R_BP_PROT_EXEC)
++			: r_bp_add_sw (dbg->bp, addr, dbg->pid, bpsz, R_BP_PROT_EXEC);
+ 	}
+ 	if (bpi) {
+ 		if (module_name) {
+@@ -528,11 +528,11 @@ R_API ut64 r_debug_execute(RDebug *dbg, const ut8 *buf, int len, int restore) {
+ 		dbg->iob.read_at (dbg->iob.io, rpc, backup, len);
+ 		dbg->iob.read_at (dbg->iob.io, rsp, stackbackup, len);
+ 
+-		r_bp_add_sw (dbg->bp, rpc+len, dbg->bpsize, R_BP_PROT_EXEC);
++		r_bp_add_sw (dbg->bp, rpc+len, dbg->pid, dbg->bpsize, R_BP_PROT_EXEC);
+ 
+ 		/* execute code here */
+ 		dbg->iob.write_at (dbg->iob.io, rpc, buf, len);
+-		//r_bp_add_sw (dbg->bp, rpc+len, 4, R_BP_PROT_EXEC);
++		//r_bp_add_sw (dbg->bp, rpc+len, dbg->pid, 4, R_BP_PROT_EXEC);
+ 		r_debug_continue (dbg);
+ 		//r_bp_del (dbg->bp, rpc+len);
+ 		/* TODO: check if stopped in breakpoint or not */
+@@ -877,7 +877,7 @@ R_API int r_debug_step_soft(RDebug *dbg) {
+ 	}
+ 
+ 	for (i = 0; i < br; i++) {
+-		RBreakpointItem *bpi = r_bp_add_sw (dbg->bp, next[i], dbg->bpsize, R_BP_PROT_EXEC);
++		RBreakpointItem *bpi = r_bp_add_sw (dbg->bp, next[i], dbg->pid, dbg->bpsize, R_BP_PROT_EXEC);
+ 		if (bpi) {
+ 			bpi->swstep = true;
+ 		}
+@@ -1144,7 +1144,7 @@ R_API int r_debug_continue_kill(RDebug *dbg, int sig) {
+ 			if (reg->cnum <= dbg->session->cnum) {
+ 				continue;
+ 			}
+-			has_bp = r_bp_get_in (dbg->bp, reg->data, R_BP_PROT_EXEC) != NULL;
++			has_bp = r_bp_get_in (dbg->bp, reg->data, dbg->pid, R_BP_PROT_EXEC) != NULL;
+ 			if (has_bp) {
+ 				eprintf ("hit breakpoint at: 0x%" PFMT64x " cnum: %d\n", reg->data, reg->cnum);
+ 				r_debug_goto_cnum (dbg, reg->cnum);
+@@ -1393,9 +1393,9 @@ static int r_debug_continue_until_internal(RDebug *dbg, ut64 addr, bool block) {
+ 		return false;
+ 	}
+ 	// Check if there was another breakpoint set at addr
+-	bool has_bp = r_bp_get_in (dbg->bp, addr, R_BP_PROT_EXEC) != NULL;
++	bool has_bp = r_bp_get_in (dbg->bp, addr, dbg->pid, R_BP_PROT_EXEC) != NULL;
+ 	if (!has_bp) {
+-		r_bp_add_sw (dbg->bp, addr, dbg->bpsize, R_BP_PROT_EXEC);
++		r_bp_add_sw (dbg->bp, addr, dbg->pid, dbg->bpsize, R_BP_PROT_EXEC);
+ 	}
+ 
+ 	// Continue until the bp is reached
+@@ -1408,7 +1408,7 @@ static int r_debug_continue_until_internal(RDebug *dbg, ut64 addr, bool block) {
+ 		if (pc == addr) {
+ 			break;
+ 		}
+-		if (block && r_bp_get_at (dbg->bp, pc)) {
++		if (block && r_bp_get_at (dbg->bp, pc, dbg->pid)) {
+ 			break;
+ 		}
+ 		r_debug_continue (dbg);
+@@ -1443,7 +1443,7 @@ R_API bool r_debug_continue_back(RDebug *dbg) {
+ 		if (reg->cnum >= dbg->session->cnum) {
+ 			continue;
+ 		}
+-		has_bp = r_bp_get_in (dbg->bp, reg->data, R_BP_PROT_EXEC) != NULL;
++		has_bp = r_bp_get_in (dbg->bp, reg->data, dbg->pid, R_BP_PROT_EXEC) != NULL;
+ 		if (has_bp) {
+ 			cnum = reg->cnum;
+ 			eprintf ("hit breakpoint at: 0x%" PFMT64x " cnum: %d\n", reg->data, reg->cnum);
+diff --git a/libr/debug/p/native/linux/linux_debug.c b/libr/debug/p/native/linux/linux_debug.c
+index 39c6b83d6..c77c2902c 100644
+--- a/libr/debug/p/native/linux/linux_debug.c
++++ b/libr/debug/p/native/linux/linux_debug.c
+@@ -101,7 +101,7 @@ int linux_handle_signals(RDebug *dbg, int tid) {
+ 		{
+ 			if (dbg->glob_libs || dbg->glob_unlibs) {
+ 				ut64 pc_addr = r_debug_reg_get (dbg, "PC");
+-				RBreakpointItem *b = r_bp_get_at (dbg->bp, pc_addr - dbg->bpsize);
++				RBreakpointItem *b = r_bp_get_at (dbg->bp, pc_addr - dbg->bpsize, dbg->pid);
+ 				if (b && b->internal) {
+ 					char *p = strstr (b->data, "dbg.");
+ 					if (p) {
+diff --git a/libr/include/r_bp.h b/libr/include/r_bp.h
+index 825c02b39..d006376b3 100644
+--- a/libr/include/r_bp.h
++++ b/libr/include/r_bp.h
+@@ -126,9 +126,9 @@ R_API int r_bp_size(RBreakpoint *bp);
+ 
+ /* bp item attribs setters */
+ R_API int r_bp_get_bytes(RBreakpoint *bp, ut8 *buf, int len, int endian, int idx);
+-R_API int r_bp_set_trace(RBreakpoint *bp, ut64 addr, int set);
++R_API int r_bp_set_trace(RBreakpoint *bp, ut64 addr, int pid, int set);
+ R_API int r_bp_set_trace_all(RBreakpoint *bp, int set);
+-R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int set, int count);
++R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int pid, int set, int count);
+ R_API int r_bp_enable_all(RBreakpoint *bp, int set);
+ 
+ /* index api */
+@@ -137,8 +137,8 @@ R_API RBreakpointItem *r_bp_get_index(RBreakpoint *bp, int idx);
+ R_API int r_bp_get_index_at (RBreakpoint *bp, ut64 addr);
+ R_API RBreakpointItem *r_bp_item_new (RBreakpoint *bp);
+ 
+-R_API RBreakpointItem *r_bp_get_at (RBreakpoint *bp, ut64 addr);
+-R_API RBreakpointItem *r_bp_get_in (RBreakpoint *bp, ut64 addr, int perm);
++R_API RBreakpointItem *r_bp_get_at (RBreakpoint *bp, ut64 addr, int pid);
++R_API RBreakpointItem *r_bp_get_in (RBreakpoint *bp, ut64 addr, int pid, int perm);
+ 
+ R_API bool r_bp_is_valid(RBreakpoint *bp, RBreakpointItem *b);
+ 
+@@ -146,8 +146,8 @@ R_API int r_bp_add_cond(RBreakpoint *bp, const char *cond);
+ R_API int r_bp_del_cond(RBreakpoint *bp, int idx);
+ R_API int r_bp_add_fault(RBreakpoint *bp, ut64 addr, int size, int perm);
+ 
+-R_API RBreakpointItem *r_bp_add_sw(RBreakpoint *bp, ut64 addr, int size, int perm);
+-R_API RBreakpointItem *r_bp_add_hw(RBreakpoint *bp, ut64 addr, int size, int perm);
++R_API RBreakpointItem *r_bp_add_sw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm);
++R_API RBreakpointItem *r_bp_add_hw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm);
+ R_API void r_bp_restore_one(RBreakpoint *bp, RBreakpointItem *b, bool set);
+ R_API int r_bp_restore(RBreakpoint *bp, bool set);
+ R_API bool r_bp_restore_except(RBreakpoint *bp, bool set, ut64 addr);
+@@ -165,7 +165,7 @@ R_API RList *r_bp_traptrace_new(void);
+ R_API void r_bp_traptrace_enable(RBreakpoint *bp, int enable);
+ 
+ /* watchpoint */
+-R_API RBreakpointItem *r_bp_watch_add(RBreakpoint *bp, ut64 addr, int size, int hw, int rw);
++R_API RBreakpointItem *r_bp_watch_add(RBreakpoint *bp, ut64 addr, int pid, int size, int hw, int rw);
+ 
+ /* plugin pointers */
+ extern RBreakpointPlugin r_bp_plugin_x86;

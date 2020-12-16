@@ -1581,7 +1581,7 @@ static void ds_print_show_cursor(RDisasmState *ds) {
 	int q = core->print->cur_enabled &&
 		ds->cursor >= ds->index &&
 		ds->cursor < (ds->index + ds->asmop.size);
-	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at);
+	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at, core->dbg->pid);
 	if (ds->midflags) {
 		(void)handleMidFlags (core, ds, false);
 	}
@@ -2240,7 +2240,7 @@ static void ds_show_flags(RDisasmState *ds) {
 			if (case_current == case_prev + 1 && switch_addr == saddr) {
 				case_prev = case_current;
 				if (iter != uniqlist->tail) {
-					continue;	
+					continue;
 				}
 			}
 		}
