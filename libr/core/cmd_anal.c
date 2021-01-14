@@ -5049,7 +5049,7 @@ repeat:
 		}
 	}
 	// check breakpoints
-	if (r_bp_get_at (core->dbg->bp, pc)) {
+	if (r_bp_get_at (core->dbg->bp, pc, core->dbg->pid)) {
 		r_cons_printf ("[ESIL] hit breakpoint at 0x%"PFMT64x "\n", pc);
 		return_tail (0);
 	}
