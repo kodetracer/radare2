@@ -8,12 +8,12 @@ static void r_bp_watch_add_hw(RBreakpoint *bp, RBreakpointItem *b) {
 	}
 }
 
-R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int size, int hw, int perm) {
+R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int pid, int size, int hw, int perm) {
 	RBreakpointItem *b;
 	if (addr == UT64_MAX || size < 1) {
 		return NULL;
 	}
-	if (r_bp_get_in (bp, addr, perm)) {
+	if (r_bp_get_in (bp, addr, pid, perm)) {
 		eprintf ("Breakpoint already set at this address.\n");
 		return NULL;
 	}
@@ -23,6 +23,7 @@ R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int size, int 
 	b->enabled = true;
 	b->perm = perm;
 	b->hw = hw;
+	b->pids[0] = pid;
 	if (hw) {
 		r_bp_watch_add_hw (bp, b);
 	} else {
