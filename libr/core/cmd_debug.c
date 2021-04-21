@@ -3483,7 +3483,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 				R_LOG_ERROR ("Unable to add breakpoint (%s)", input + 2);
 			}
 		} else {
-			bpi = r_bp_get_at (core->dbg->bp, core->offset);
+			bpi = r_bp_get_at (core->dbg->bp, core->offset, core->dbg->pid);
 			if (bpi) {
 				r_cons_printf ("breakpoint %s %s %s\n",
 						r_str_rwx_i (bpi->perm),
@@ -3516,7 +3516,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 			if (addr == UT64_MAX) {
 				addr = core->offset;
 			}
-			bpi = r_bp_get_at (core->dbg->bp, addr);
+			bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 			if (bpi) {
 				free (bpi->expr);
 				bpi->expr = strdup (input + 3);
@@ -3546,7 +3546,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 			}
 			if (*p == '*') {
 				r_bp_set_trace_all (core->dbg->bp,true);
-			} else if (!r_bp_set_trace (core->dbg->bp, addr, true)) {
+			} else if (!r_bp_set_trace (core->dbg->bp, addr, core->dbg->pid, true)) {
 				R_LOG_ERROR ("Cannot set tracepoint");
 			}
 			break;
@@ -3556,12 +3556,12 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 			}
 			if (*p == '*') {
 				r_bp_set_trace_all (core->dbg->bp, false);
-			} else if (!r_bp_set_trace (core->dbg->bp, addr, false)) {
+			} else if (!r_bp_set_trace (core->dbg->bp, addr, core->dbg->pid, false)) {
 				R_LOG_ERROR ("Cannot unset tracepoint");
 			}
 			break;
 		case 's': // "dbts"
-			bpi = r_bp_get_at (core->dbg->bp, addr);
+			bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 			if (bpi) {
 				bpi->trace = !!!bpi->trace;
 			} else {
@@ -3735,7 +3735,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 				if (arg) {
 					*arg++ = 0;
 					addr = r_num_math (core->num, inp);
-					bpi = r_bp_get_at (core->dbg->bp, addr);
+					bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 					if (bpi) {
 						free (bpi->data);
 						bpi->data = strdup (arg);
@@ -3760,7 +3760,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 			if (arg) {
 				*arg++ = 0;
 				addr = r_num_math (core->num, inp);
-				bpi = r_bp_get_at (core->dbg->bp, addr);
+				bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 				if (bpi) {
 					free (bpi->cond);
 					bpi->cond = strdup (arg);
@@ -3777,7 +3777,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 		break;
 	case 's': // "dbs"
 		addr = r_num_math (core->num, input + 2);
-		bpi = r_bp_get_at (core->dbg->bp, addr);
+		bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 		if (bpi) {
 			//bp->enabled = !bp->enabled;
 			// XXX(jjd): this ^^ is what I would think toggling means...
@@ -3789,10 +3789,10 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 				R_LOG_ERROR ("Cannot set breakpoint (%s)", input + 2);
 			}
 		}
-		r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), true, 0);
+		r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, true, 0);
 		break;
 	case 'n': // "dbn"
-		bpi = r_bp_get_at (core->dbg->bp, core->offset);
+		bpi = r_bp_get_at (core->dbg->bp, core->offset, core->dbg->pid);
 		if (input[2] == ' ') {
 			if (bpi) {
 				free (bpi->name);
@@ -3811,7 +3811,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 		if (*p == '*') r_bp_enable_all (core->dbg->bp,true);
 		else {
 			for (; *p && *p != ' '; p++);
-			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), true, r_num_math (core->num, p));
+			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, true, r_num_math (core->num, p));
 		}
 		break;
 	case 'd': // "dbd"
@@ -3819,7 +3819,7 @@ static void r_core_cmd_bp(RCore *core, const char *input) {
 		if (*p == '*') r_bp_enable_all (core->dbg->bp, false);
 		else {
 			for (; *p && *p != ' '; p++);
-			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), false, r_num_math (core->num, p));
+			r_bp_enable (core->dbg->bp, r_num_math (core->num, input + 2), core->dbg->pid, false, r_num_math (core->num, p));
 		}
 		break;
 	case 'h': // "dbh"
@@ -4432,7 +4432,7 @@ static bool cmd_dcu(RCore *core, const char *input) {
 		}
 		R_LOG_INFO ("Continue until 0x%08"PFMT64x" using %d bpsize", addr, core->dbg->bpsize);
 		r_reg_arena_swap (core->dbg->reg, true);
-		if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->bpsize, R_BP_PROT_EXEC)) {
+		if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->pid, core->dbg->bpsize, R_BP_PROT_EXEC)) {
 			if (r_debug_is_dead (core->dbg)) {
 				R_LOG_ERROR ("Cannot continue, run ood?");
 			} else {
@@ -4725,7 +4725,7 @@ static int cmd_debug_step(RCore *core, const char *input) {
 		{
 			char delb[128] = {0};
 			addr = r_debug_reg_get (core->dbg, "PC");
-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr);
+			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 			sprintf(delb, "db 0x%"PFMT64x, addr);
 			r_reg_arena_swap (core->dbg->reg, true);
 			for (i = 0; i < times; i++) {
@@ -4756,7 +4756,7 @@ static int cmd_debug_step(RCore *core, const char *input) {
 			if (r_config_get_b (core->config, "cfg.debug")) {
 				char delb[128] = {0};
 				addr = r_debug_reg_get (core->dbg, "PC");
-				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr);
+				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 				sprintf(delb, "db 0x%"PFMT64x, addr);
 				r_bp_del (core->dbg->bp, addr);
 				r_reg_arena_swap (core->dbg->reg, true);
