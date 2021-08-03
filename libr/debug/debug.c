@@ -447,9 +447,9 @@ R_API int r_debug_attach(RDebug *dbg, int pid) {
 	int ret = false;
 	if (dbg && dbg->h && dbg->h->attach) {
 		ret = dbg->h->attach (dbg, pid);
-		if (ret != -1) {
-			r_debug_select (dbg, pid, ret); //dbg->pid, dbg->tid);
-		}
+		// if (ret != -1) {
+		// 	r_debug_select (dbg, pid, ret); //dbg->pid, dbg->tid);
+		// }
 	}
 	return ret;
 }
