@@ -23,6 +23,7 @@ R_API RBreakpointItem* r_bp_watch_add(RBreakpoint *bp, ut64 addr, int pid, int s
 	b->enabled = true;
 	b->perm = perm;
 	b->hw = hw;
+	// TODO: Add support for multiple processes
 	b->pids[0] = pid;
 	if (hw) {
 		r_bp_watch_add_hw (bp, b);

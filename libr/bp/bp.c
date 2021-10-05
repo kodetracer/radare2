@@ -187,6 +187,7 @@ static RBreakpointItem *r_bp_add(RBreakpoint *bp, const ut8 *obytes, ut64 addr, 
 	b->enabled = true;
 	b->perm = perm;
 	b->hw = hw;
+	// TODO: Add support for multiple pids
 	b->pids[0] = pid;
 	// NOTE: for hw breakpoints there are no bytes to save/restore
 	if (!hw) {
