@@ -456,8 +456,7 @@ R_API bool r_debug_attach(RDebug *dbg, int pid) {
 	if (plugin && plugin->attach) {
 		ret = plugin->attach (dbg, pid);
 		if (ret) {
-			dbg->pid = pid;
-			dbg->tid = pid;
+			// dbg->tid = pid;
 			// dbg->pid = pid;
 			// r_debug_select (dbg, pid, ret);
 			r_debug_select (dbg, dbg->pid, dbg->tid);
@@ -661,6 +660,7 @@ R_API bool r_debug_select(RDebug *dbg, int pid, int tid) {
 			return false;
 		}
 	}
+	/*
 	dbg->pid = pid;
 	dbg->tid = tid;
 	if (dbg->pid != -1) {
@@ -672,6 +672,7 @@ R_API bool r_debug_select(RDebug *dbg, int pid, int tid) {
 	} else {
 		R_LOG_ERROR ("Cannot find pid for child %d", dbg->pid);
 	}
+	*/
 
 	// Synchronize with the current thread's data
 	if (dbg->coreb.core) {
