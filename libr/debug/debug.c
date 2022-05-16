@@ -569,7 +569,7 @@ R_API bool r_debug_execute(RDebug *dbg, const ut8 *buf, int len, R_OUT ut64 *ret
 	}
 
 	bp_addr = reg_pc + len;
-	r_bp_add_sw (dbg->bp, bp_addr, dbg->bpsize, R_BP_PROT_EXEC);
+	r_bp_add_sw (dbg->bp, bp_addr, dbg->pid, dbg->bpsize, R_BP_PROT_EXEC);
 
 	dbg->iob.write_at (dbg->iob.io, reg_pc, buf, len);
 	r_debug_continue (dbg);
