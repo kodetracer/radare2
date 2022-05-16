@@ -1,0 +1,29 @@
+# medium light blue
+ec flow2 rgb:0060f0
+ec nop rgb:0060f0
+ec mov rgb:0060f0
+ec func_var rgb:0060f0
+ec func_var_type rgb:0060f0
+ec usrcmt rgb:0060f0
+ec input rgb:0060f0
+ec ai.write rgb:0060f0
+ec graph.current rgb:0060f0
+ec other rgb:0060f0
+
+# yellow
+ec args rgb:ffff00
+ec prompt rgb:0060f0
+ec math rgb:0060f0
+ec bin rgb:0060f0
+ec btext rgb:0060f0
+ec cmp rgb:0060f0
+ec num rgb:0060f0
+ec ai.ascii rgb:0060f0
+ec graph.box2 rgb:0060f0
+ec graph.traced rgb:0060f0
+ec graph.diff.unmatch rgb:0060f0
+ec gui.cflow rgb:0060f0
+ec gui.dataoffset rgb:0060f0
+
+# red
+# ec comment rgb:xxxxxx
