@@ -12,18 +12,18 @@ ec other rgb:0060f0
 
 # yellow
 ec args rgb:ffff00
-ec prompt rgb:0060f0
-ec math rgb:0060f0
-ec bin rgb:0060f0
-ec btext rgb:0060f0
-ec cmp rgb:0060f0
-ec num rgb:0060f0
-ec ai.ascii rgb:0060f0
-ec graph.box2 rgb:0060f0
-ec graph.traced rgb:0060f0
-ec graph.diff.unmatch rgb:0060f0
-ec gui.cflow rgb:0060f0
-ec gui.dataoffset rgb:0060f0
+ec prompt rgb:ffff00
+ec math rgb:ffff00
+ec bin rgb:ffff00
+ec btext rgb:ffff00
+ec cmp rgb:ffff00
+ec num rgb:ffff00
+ec ai.ascii rgb:ffff00
+ec graph.box2 rgb:ffff00
+ec graph.traced rgb:ffff00
+ec graph.diff.unmatch rgb:ffff00
+ec gui.cflow rgb:ffff00
+ec gui.dataoffset rgb:ffff00
 
 # red
 # ec comment rgb:xxxxxx
