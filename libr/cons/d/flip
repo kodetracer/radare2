@@ -11,19 +11,19 @@ ec graph.current rgb:0060f0
 ec other rgb:0060f0
 
 # yellow
-ec args rgb:ffff00
-ec prompt rgb:ffff00
-ec math rgb:ffff00
-ec bin rgb:ffff00
-ec btext rgb:ffff00
-ec cmp rgb:ffff00
-ec num rgb:ffff00
-ec ai.ascii rgb:ffff00
-ec graph.box2 rgb:ffff00
-ec graph.traced rgb:ffff00
-ec graph.diff.unmatch rgb:ffff00
-ec gui.cflow rgb:ffff00
-ec gui.dataoffset rgb:ffff00
+ec args rgb:c06000
+ec prompt rgb:c06000
+ec math rgb:c06000
+ec bin rgb:c06000
+ec btext rgb:c06000
+ec cmp rgb:c06000
+ec num rgb:c06000
+ec ai.ascii rgb:c06000
+ec graph.box2 rgb:c06000
+ec graph.traced rgb:c06000
+ec graph.diff.unmatch rgb:c06000
+ec gui.cflow rgb:c06000
+ec gui.dataoffset rgb:c06000
 
 # red
 # ec comment rgb:xxxxxx
