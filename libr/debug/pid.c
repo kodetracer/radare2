@@ -112,7 +112,7 @@ R_API bool r_debug_thread_list(RDebug *dbg, int pid, char fmt) {
 				pj_o (j);
 				pj_kb (j, "current", dbg->tid == p->pid);
 				pj_ki (j, "pid", p->pid);
-				pj_ks (j, "status", &p->status);
+				// pj_ks (j, "status", &p->status);
 				pj_ks (j, "path", r_strbuf_get (path));
 				pj_end (j);
 				break;
