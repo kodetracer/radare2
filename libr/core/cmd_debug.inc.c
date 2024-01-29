@@ -4589,12 +4589,12 @@ static bool cmd_dcu(RCore *core, const char *input) {
 			r_cons_break_pop ();
 			return true;
 		}
-		RBreakpointItem *bp = r_bp_get_at (core->dbg->bp, addr);
+		RBreakpointItem *bp = r_bp_get_at (core->dbg->bp, addr, core->dbg->pid);
 		bool bpset = false;
 		if (bp) {
 			// theres a breakpoint already so no need to set
 		} else {
-			if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->bpsize, R_BP_PROT_EXEC)) {
+			if (r_bp_add_sw (core->dbg->bp, addr, core->dbg->pid, core->dbg->bpsize, R_BP_PROT_EXEC)) {
 				bpset = true;
 				// ok go on!
 			} else {
