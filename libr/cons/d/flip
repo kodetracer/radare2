@@ -2,8 +2,10 @@
 ec flow2 rgb:0060f0
 ec nop rgb:0060f0
 ec mov rgb:0060f0
-ec func_var rgb:0060f0
-ec func_var_type rgb:0060f0
+ec var rgb:0060f0
+ec var.type rgb:0060f0
+ec var.addr rgb:0060f0
+ec var.name rgb:0060f0
 ec usrcmt rgb:0060f0
 ec input rgb:0060f0
 ec ai.write rgb:0060f0
@@ -21,7 +23,7 @@ ec num rgb:c06000
 ec ai.ascii rgb:c06000
 ec graph.box2 rgb:c06000
 ec graph.traced rgb:c06000
-ec graph.diff.unmatch rgb:c06000
+# ec graph.diff.unmatch rgb:c06000
 ec gui.cflow rgb:c06000
 ec gui.dataoffset rgb:c06000
 
