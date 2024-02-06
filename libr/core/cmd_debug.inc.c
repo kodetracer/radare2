@@ -4944,8 +4944,8 @@ static int cmd_debug_step(RCore *core, const char *input) {
 			// sync registers for BSD PT_STEP/PT_CONT
 			// XXX(jjd): is this necessary?
 			r_debug_reg_sync (core->dbg, R_REG_TYPE_GPR, false);
-			ut64 pc = r_debug_reg_get (core->dbg, "PC");
-			r_debug_trace_pc (core->dbg, pc);
+			// ut64 pc = r_debug_reg_get (core->dbg, "PC");
+			// r_debug_trace_pc (core->dbg, pc);
 			if (!r_debug_step (core->dbg, times)) {
 				R_LOG_ERROR ("Step failed");
 				core->break_loop = true;
