@@ -92,12 +92,18 @@ repeat:
 	return 0;
 }
 
-R_API RBreakpointItem *r_bp_get_at(RBreakpoint *bp, ut64 addr) {
+static inline bool containsPid(RBreakpointItem *b, int pid) {
+	/* TODO: Add support for multiple pids per breakpoint item */
+	if (b->pids[0] == R_BP_ANY_PROCESS) return true;
+	return b->pids[0] == pid;
+}
+
+R_API RBreakpointItem *r_bp_get_at(RBreakpoint *bp, ut64 addr, int pid) {
 	R_RETURN_VAL_IF_FAIL (bp, NULL);
 	RListIter *iter;
 	RBreakpointItem *b;
-	r_list_foreach (bp->bps, iter, b) {
-		if (b->addr == addr) {
+	r_list_foreach(bp->bps, iter, b) {
+		if (b->addr == addr && containsPid(b, pid)) {
 			return b;
 		}
 	}
@@ -112,22 +118,22 @@ static inline bool matchProt(RBreakpointItem *b, int perm) {
 	return (!perm || (perm && b->perm));
 }
 
-R_API RBreakpointItem *r_bp_get_in(RBreakpoint *bp, ut64 addr, int perm) {
+R_API RBreakpointItem *r_bp_get_in(RBreakpoint *bp, ut64 addr, int pid, int perm) {
 	R_RETURN_VAL_IF_FAIL (bp, NULL);
 	RBreakpointItem *b;
 	RListIter *iter;
 	r_list_foreach (bp->bps, iter, b) {
 		// Check addr within range and provided perm matches (or null)
-		if (inRange (b, addr) && matchProt (b, perm)) {
+		if (inRange (b, addr) && containsPid(b, pid) && matchProt (b, perm)) {
 			return b;
 		}
 	}
 	return NULL;
 }
 
-R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int set, int count) {
+R_API RBreakpointItem *r_bp_enable(RBreakpoint *bp, ut64 addr, int pid, int set, int count) {
 	R_RETURN_VAL_IF_FAIL (bp, NULL);
-	RBreakpointItem *b = r_bp_get_in (bp, addr, 0);
+	RBreakpointItem *b = r_bp_get_in (bp, addr, pid, 0);
 	if (b) {
 		b->enabled = set;
 		b->togglehits = count;
@@ -162,12 +168,12 @@ static void unlinkBreakpoint(RBreakpoint *bp, RBreakpointItem *b) {
 }
 
 /* TODO: detect overlapping of breakpoints */
-static RBreakpointItem *r_bp_add(RBreakpoint *bp, R_NULLABLE const ut8 *obytes, ut64 addr, int size, int hw, int perm) {
+static RBreakpointItem *r_bp_add(RBreakpoint *bp, const ut8 *obytes, ut64 addr, int pid, int size, int hw, int perm) {
 	R_RETURN_VAL_IF_FAIL (bp, NULL);
 	if (addr == UT64_MAX || size < 1) {
 		return NULL;
 	}
-	if (r_bp_get_in (bp, addr, perm)) {
+	if (r_bp_get_in (bp, addr, pid, perm)) {
 		R_LOG_WARN ("Breakpoint already set at this address");
 		return NULL;
 	}
@@ -187,6 +193,8 @@ static RBreakpointItem *r_bp_add(RBreakpoint *bp, R_NULLABLE const ut8 *obytes, 
 	b->enabled = true;
 	b->perm = perm;
 	b->hw = hw;
+	/* TODO: Add support for multiple pids per breakpoint item */
+	b->pids[0] = pid;
 	// NOTE: for hw breakpoints there are no bytes to save/restore
 	if (!hw) {
 		b->bbytes = calloc (size + 16, 1);
@@ -217,7 +225,7 @@ R_API void r_bp_add_fault(RBreakpoint *bp, ut64 addr, int size, int perm) {
 	// TODO
 }
 
-R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int size, int perm) {
+R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm) {
 	R_RETURN_VAL_IF_FAIL (bp && bp->iob.read_at, NULL);
 	if (size < 1) {
 		size = 1;
@@ -227,13 +235,13 @@ R_API RBreakpointItem* r_bp_add_sw(RBreakpoint *bp, ut64 addr, int size, int per
 		return NULL;
 	}
 	bp->iob.read_at (bp->iob.io, addr, bytes, size);
-	RBreakpointItem *item = r_bp_add (bp, bytes, addr, size, R_BP_TYPE_SW, perm);
+	RBreakpointItem *item = r_bp_add (bp, bytes, addr, pid, size, R_BP_TYPE_SW, perm);
 	free (bytes);
 	return item;
 }
 
-R_API RBreakpointItem* r_bp_add_hw(RBreakpoint *bp, ut64 addr, int size, int perm) {
-	return r_bp_add (bp, NULL, addr, size, R_BP_TYPE_HW, perm);
+R_API RBreakpointItem* r_bp_add_hw(RBreakpoint *bp, ut64 addr, int pid, int size, int perm) {
+	return r_bp_add (bp, NULL, addr, pid, size, R_BP_TYPE_HW, perm);
 }
 
 R_API bool r_bp_del_all(RBreakpoint *bp) {
@@ -248,6 +256,7 @@ R_API bool r_bp_del_all(RBreakpoint *bp) {
 	return false;
 }
 
+/* TODO: Also consider perm and pid */
 R_API bool r_bp_del(RBreakpoint *bp, ut64 addr) {
 	RListIter *iter;
 	RBreakpointItem *b;
@@ -262,8 +271,8 @@ R_API bool r_bp_del(RBreakpoint *bp, ut64 addr) {
 	return false;
 }
 
-R_API bool r_bp_set_trace(RBreakpoint *bp, ut64 addr, int set) {
-	RBreakpointItem *b = r_bp_get_in (bp, addr, 0);
+R_API bool r_bp_set_trace(RBreakpoint *bp, ut64 addr, int pid, int set) {
+	RBreakpointItem *b = r_bp_get_in (bp, addr, pid, 0);
 	if (b) {
 		b->trace = set;
 		return true;

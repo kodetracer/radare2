@@ -365,7 +365,7 @@ static bool setbpint(RCore *r, const char *mode, const char *sym) {
 	if (!fi) {
 		return false;
 	}
-	bp = r_bp_add_sw (r->dbg->bp, fi->addr, 1, R_BP_PROT_EXEC);
+	bp = r_bp_add_sw (r->dbg->bp, fi->addr, r->dbg->pid, 1, R_BP_PROT_EXEC);
 	if (bp) {
 		bp->internal = true;
 #if __linux__
