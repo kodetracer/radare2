@@ -7033,7 +7033,7 @@ R_API int r_core_esil_step(RCore *core, ut64 until_addr, const char *until_expr,
 			}
 		}
 		// check breakpoints
-		if (r_bp_get_at (core->dbg->bp, pc)) {
+		if (r_bp_get_at (core->dbg->bp, pc, core->dbg->pid)) {
 			R_LOG_INFO ("esil breakpoint hit at 0x%"PFMT64x, pc);
 			return_tail (0);
 		}

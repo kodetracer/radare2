@@ -1814,7 +1814,7 @@ static void ds_print_show_cursor(RDisasmState *ds) {
 		cursor_addr >= ds->at &&
 		cursor_addr < (ds->at + ds->asmop.size);
 
-	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at);
+	RBreakpointItem *p = r_bp_get_at (core->dbg->bp, ds->at, core->dbg->pid);
 	(void)handleMidFlags (core, ds, false);
 	if (ds->midbb) {
 		(void)handleMidBB (core, ds);
