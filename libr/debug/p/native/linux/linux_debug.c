@@ -120,7 +120,7 @@ int linux_handle_signals(RDebug *dbg, int tid) {
 		{
 			if (dbg->glob_libs || dbg->glob_unlibs) {
 				ut64 pc_addr = r_debug_reg_get (dbg, "PC");
-				RBreakpointItem *b = r_bp_get_at (dbg->bp, pc_addr - dbg->bpsize);
+				RBreakpointItem *b = r_bp_get_at (dbg->bp, pc_addr - dbg->bpsize, dbg->pid);
 				if (b && b->internal) {
 					char *p = strstr (b->data, "dbg.");
 					if (p) {
