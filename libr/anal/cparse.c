@@ -154,6 +154,7 @@ R_API char *r_anal_cparse_file(RAnal *anal, const char *path, const char *dir, c
 R_API char *r_anal_cparse(RAnal *anal, const char *code, char **error_msg) {
 	char *str = NULL;
 	TCCState *s1 = new_tcc (anal);
+	R_LOG_INFO("[tcc] instantiate for arch: %s", anal->config->arch);
 	if (!s1) {
 		R_LOG_ERROR ("Cannot instantiate TCC for given arch (%s)", anal->config->arch);
 		return NULL;
