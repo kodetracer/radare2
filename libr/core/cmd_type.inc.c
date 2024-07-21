@@ -286,7 +286,9 @@ static void showFormat(RCore *core, const char *name, int mode) {
 	if (isenum && !strcmp (isenum, "enum")) {
 		R_LOG_INFO ("Type is an enum");
 	} else {
+		R_LOG_INFO ("[tcc] show format for: %s", name);
 		char *fmt = r_type_format (core->anal->sdb_types, name);
+		R_LOG_INFO ("[tcc] format: %s", fmt);
 		if (fmt) {
 			r_str_trim (fmt);
 			if (mode == 'j') {
