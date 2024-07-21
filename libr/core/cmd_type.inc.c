@@ -1521,7 +1521,9 @@ static int cmd_type(void *data, const char *input) {
 				break;
 			}
 			char *errmsg = NULL;
+			R_LOG_INFO ("[tcc] parsing: %s", tmp);
 			char *out = r_anal_cparse (core->anal, tmp, &errmsg);
+			R_LOG_INFO ("[tcc] out: %s", tmp);
 			free (tmp);
 			if (out) {
 				r_anal_save_parsed_type (core->anal, out);
