@@ -873,7 +873,7 @@ SDB_API int sdb_query_lines(Sdb *s, const char *cmd) {
 		if (o) {
 			*o = 0;
 		}
-		R_LOG_INFO ("[tcc] sdb query p: %s", p);
+		// R_LOG_INFO ("[tcc] sdb query p: %s", p);
 		(void)sdb_query (s, p);
 		if (o) {
 			p = o + 1;
