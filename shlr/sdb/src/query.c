@@ -842,7 +842,10 @@ fail:
 SDB_API bool sdb_query(Sdb *s, const char *cmd) {
 	char buf[128];
 	bool must_save = ((*cmd == '~') || strchr (cmd, '='));
+
+	R_LOG_INFO ("[tcc] sdb query: %s", cmd);
 	char *out = sdb_querys (s, buf, sizeof (buf) - 1, cmd);
+	R_LOG_INFO ("[tcc] sdb out: %s", out);
 	if (out) {
 		if (*out) {
 			fputs (out, stdout);
