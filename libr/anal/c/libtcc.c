@@ -278,6 +278,7 @@ static int tcc_compile(TCCState *s1) {
 	s1->nb_errors = 0;
 	s1->error_set_jmp_enabled = true;
 	s1->ch = s1->file->buf_ptr[0];
+	R_LOG_INFO ("[tcc] ch: %c", s1->ch);
 	s1->tok_flags = TOK_FLAG_BOL | TOK_FLAG_BOF;
 	s1->parse_flags = PARSE_FLAG_PREPROCESS | PARSE_FLAG_TOK_NUM;
 	// parse_flags = PARSE_FLAG_TOK_NUM;
