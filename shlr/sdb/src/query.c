@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include "sdb/sdb.h"
-#include <r_util/r_log.h>
 
 typedef struct {
 	char *buf;
@@ -867,13 +866,11 @@ SDB_API int sdb_query_lines(Sdb *s, const char *cmd) {
 		return 0;
 	}
 	p = op;
-	R_LOG_INFO ("[tcc] sdb query cmd: %s", cmd);
 	do {
 		o = strchr (p, '\n');
 		if (o) {
 			*o = 0;
 		}
-		// R_LOG_INFO ("[tcc] sdb query p: %s", p);
 		(void)sdb_query (s, p);
 		if (o) {
 			p = o + 1;
