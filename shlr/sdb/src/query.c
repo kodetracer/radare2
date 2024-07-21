@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include "sdb/sdb.h"
+#include <r_util/r_log.h>
 
 typedef struct {
 	char *buf;
