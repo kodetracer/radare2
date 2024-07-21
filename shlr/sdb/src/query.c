@@ -844,9 +844,8 @@ SDB_API bool sdb_query(Sdb *s, const char *cmd) {
 	char buf[128];
 	bool must_save = ((*cmd == '~') || strchr (cmd, '='));
 
-	R_LOG_INFO ("[tcc] sdb query: %s", cmd);
+	// R_LOG_INFO ("[tcc] sdb query: %s", cmd);
 	char *out = sdb_querys (s, buf, sizeof (buf) - 1, cmd);
-	R_LOG_INFO ("[tcc] sdb out: %s", out);
 	if (out) {
 		if (*out) {
 			fputs (out, stdout);
@@ -868,11 +867,13 @@ SDB_API int sdb_query_lines(Sdb *s, const char *cmd) {
 		return 0;
 	}
 	p = op;
+	R_LOG_INFO ("[tcc] sdb query cmd: %s", cmd);
 	do {
 		o = strchr (p, '\n');
 		if (o) {
 			*o = 0;
 		}
+		R_LOG_INFO ("[tcc] sdb query p: %s", p);
 		(void)sdb_query (s, p);
 		if (o) {
 			p = o + 1;
