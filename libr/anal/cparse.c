@@ -19,6 +19,7 @@ extern int tcc_sym_push(TCCState *s1, char *typename, int typesize, int meta);
 /* parse C code and return it in key-value form */
 
 static void __appendString(const char *msg, char **s) {
+	R_LOG_INFO ("[tcc] append string: %s", msg);
 	if (!s) {
 		printf ("%s\n", msg);
 	} else if (*s) {
