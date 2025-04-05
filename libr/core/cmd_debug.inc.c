@@ -819,7 +819,7 @@ static int step_until(RCore *core, ut64 addr) {
 		r_debug_step (core->dbg, 1);
 		pc = r_debug_reg_get (core->dbg, "PC");
 		if (honorbps) {
-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 			if (bpi) {
 				R_LOG_INFO ("Breakpoint hit");
 				break;
@@ -893,7 +893,7 @@ static bool step_until_inst(RCore *core, const char *instr, bool regex) {
 		/* TODO: disassemble instruction and strstr */
 		r_asm_set_pc (core->rasm, pc);
 		if (honorbps) {
-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 			if (bpi) {
 				R_LOG_INFO ("Breakpoint hit");
 				break;
@@ -980,7 +980,7 @@ static bool step_until_optype(RCore *core, const char *_optypes) {
 			}
 		}
 		if (honorbps) {
-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 			if (bpi) {
 				R_LOG_INFO ("Breakpoint hit");
 				break;
@@ -1029,7 +1029,7 @@ static bool step_until_flag(RCore *core, const char *instr) {
 		r_debug_reg_sync (core->dbg, R_REG_TYPE_ALL, false);
 		ut64 pc = r_debug_reg_get (core->dbg, "PC");
 		if (honorbps) {
-			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+			RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 			if (bpi) {
 				R_LOG_INFO ("Breakpoint hit");
 				break;
@@ -4625,7 +4625,7 @@ static bool cmd_dcu(RCore *core, const char *input) {
 			r_debug_reg_sync (core->dbg, R_REG_TYPE_GPR, false);
 			pc = r_debug_reg_get (core->dbg, "PC");
 			if (honorbps) {
-				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+				RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 				if (bpi) {
 					R_LOG_INFO ("Breakpoint hit");
 					break;
@@ -4655,7 +4655,7 @@ static bool cmd_dcu(RCore *core, const char *input) {
 				r_debug_reg_sync (core->dbg, R_REG_TYPE_GPR, false);
 				pc = r_debug_reg_get (core->dbg, "PC");
 				if (honorbps) {
-					RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc);
+					RBreakpointItem *bpi = r_bp_get_at (core->dbg->bp, pc, core->dbg->pid);
 					if (bpi) {
 						R_LOG_INFO ("Breakpoint hit");
 						break;
