@@ -1188,10 +1188,12 @@ static void cmd_debug_pid(RCore *core, const char *input) {
 		break;
 	case 'a': // "dpa"
 		if (input[2]) {
+			eprintf("[cmd_debug_pid] dpa input[2]\n");
 			const int pid = (int) r_num_math (core->num, input + 2);
 			r_debug_attach (core->dbg, pid);
 		} else {
 			if (core->io && core->io->desc) {
+				eprintf("[cmd_debug_pid] dpa core->io\n");
 				const int pid = r_io_fd_get_pid (core->io, core->io->desc->fd);
 				r_debug_attach (core->dbg, pid);
 			}
