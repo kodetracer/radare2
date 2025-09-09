@@ -990,6 +990,8 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 		flags = R_PERM_R;
 	}
 	r->io->bits = r->rasm->config->bits; // TODO: we need an api for this
+
+	eprintf("[r_core_file_open]\n");
 	RIODesc *fd = r_io_open_nomap (r->io, file, flags, 0644);
 	if (r_cons_is_breaked (r->cons)) {
 		goto beach;
@@ -1003,6 +1005,7 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 	}
 	if (!fd) {
 		if (flags & R_PERM_W) {
+			eprintf("[r_core_file_open] with write\n");
 		//	flags |= R_IO_CREAT;
 			if (!(fd = r_io_open_nomap (r->io, file, flags, 0644))) {
 				goto beach;
