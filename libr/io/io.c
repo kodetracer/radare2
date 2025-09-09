@@ -45,9 +45,11 @@ R_API RIODesc *r_io_open_buffer(RIO *io, RBuffer *b, int perm, int mode) {
 }
 
 R_API RIODesc *r_io_open_nomap(RIO *io, const char *uri, int perm, int mode) {
+	eprintf("[r_io_open_nomap]\n");
 	R_RETURN_VAL_IF_FAIL (io && uri, NULL);
 	RIODesc *desc = r_io_desc_open (io, uri, perm, mode);
 	if ((io->autofd || !io->desc) && desc) {
+		eprintf("[r_io_open_nomap] setting desc\n");
 		io->desc = desc;
 	}
 	//set desc as current if autofd or io->desc==NULL

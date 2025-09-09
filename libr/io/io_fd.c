@@ -3,6 +3,7 @@
 #include <r_io.h>
 
 R_API int r_io_fd_open(RIO *io, const char *uri, int flags, int mode) {
+	eprintf("[r_io_fd_open]\n");
 	RIODesc *desc = r_io_desc_open (io, uri, flags, mode);
 	return desc? desc->fd: -1;
 }
