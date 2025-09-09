@@ -448,6 +448,7 @@ R_API void r_debug_free(RDebug *dbg) {
 }
 
 R_API bool r_debug_attach(RDebug *dbg, int pid) {
+	eprintf ("[debug.c] r_debug_attach: %d\n", pid);
 	R_RETURN_VAL_IF_FAIL (dbg, false);
 	if (pid < 0) {
 		return false;
@@ -455,6 +456,7 @@ R_API bool r_debug_attach(RDebug *dbg, int pid) {
 	bool ret = false;
 	RDebugPlugin *plugin = R_UNWRAP3 (dbg, current, plugin);
 	if (plugin && plugin->attach) {
+		eprintf ("[debug.c] calling plugin->attach\n");
 		ret = plugin->attach (dbg, pid);
 		if (ret) {
 			// dbg->tid = pid;
@@ -464,6 +466,7 @@ R_API bool r_debug_attach(RDebug *dbg, int pid) {
 		}
 	}
 	dbg->reason.type = R_DEBUG_REASON_STOPPED;
+	eprintf ("[debug.c] r_debug_attach ret: %d\n", ret);
 	return ret;
 }
 
