@@ -59,6 +59,7 @@ R_API RIODesc *r_io_open_nomap(RIO *io, const char *uri, int perm, int mode) {
 /* opens a file and maps it to 0x0 */
 R_API RIODesc* r_io_open(RIO* io, const char* uri, int perm, int mode) {
 	R_RETURN_VAL_IF_FAIL (io, NULL);
+	eprintf("[r_io_open]\n");
 	RIODesc* desc = r_io_open_nomap (io, uri, perm, mode);
 	if (desc) {
 		r_io_map_add (io, desc->fd, desc->perm, 0LL, 0LL, r_io_desc_size (desc));
@@ -69,6 +70,7 @@ R_API RIODesc* r_io_open(RIO* io, const char* uri, int perm, int mode) {
 /* opens a file and maps it to an offset specified by the "at"-parameter */
 R_API RIODesc* r_io_open_at(RIO* io, const char* uri, int perm, int mode, ut64 at) {
 	R_RETURN_VAL_IF_FAIL (io && uri, NULL);
+	eprintf("[r_io_open_at]\n");
 
 	RIODesc* desc = r_io_open_nomap (io, uri, perm, mode);
 	if (desc) {
