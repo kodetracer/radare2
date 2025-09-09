@@ -689,6 +689,7 @@ static bool mustreopen(RCore *core, RIODesc *desc, const char *fn) {
 R_API bool r_core_bin_load(RCore *r, const char *filenameuri, ut64 baddr) {
 	R_RETURN_VAL_IF_FAIL (r && r->io, false);
 	R_CRITICAL_ENTER (r);
+	eprintf("[r_core_bin_load]\n");
 	ut64 laddr = r_config_get_i (r->config, "bin.laddr");
 	RIODesc *desc = r->io->desc;
 	if (!desc && filenameuri) {
@@ -726,6 +727,7 @@ R_API bool r_core_bin_load(RCore *r, const char *filenameuri, ut64 baddr) {
 			r_core_file_load_for_debug (r, baddr, filenameuri);
 		} else {
 			if (mustreopen (r, desc, filenameuri)) {
+				eprintf("[r_core_bin_load] must reopen\n");
 				r_core_file_open (r, filenameuri, 0, baddr);
 				if (odesc != r->io->desc) {
 					mustclose = r->io->desc;
