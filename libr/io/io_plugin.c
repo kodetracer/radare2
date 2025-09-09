@@ -46,10 +46,12 @@ R_API RIOPlugin *r_io_plugin_resolve(RIO *io, const char *filename, bool many) {
 				continue;
 			}
 			if (ret->check (io, filename, many)) {
+			eprintf ("[r_io_plugin_resolve] %s checked ok\n", filename);
 				return ret;
 			}
 		}
 	}
+	eprintf ("[r_io_plugin_resolve] using io_plugin_default\n");
 	return &r_io_plugin_default;
 }
 

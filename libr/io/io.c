@@ -110,6 +110,7 @@ R_API RList* r_io_open_many(RIO* io, const char* uri, int perm, int mode) {
 }
 
 R_API bool r_io_reopen(RIO* io, int fd, int perm, int mode) {
+	eprintf ("[io.c] r_io_reopen\n");
 	RIODesc	*fold = r_io_desc_get (io, fd);
 	if (!fold) {
 		return false;
