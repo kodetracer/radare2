@@ -52,6 +52,7 @@ static void load_gp(RCore *core) {
 }
 
 R_API bool r_core_file_reopen(RCore *core, const char *args, int perm, int loadbin) {
+	eprintf("[r_core_file_reopen]\n");
 	const bool isdebug = r_config_get_b (core->config, "cfg.debug");
 	char *path;
 	ut64 laddr = r_config_get_i (core->config, "bin.laddr");
@@ -539,6 +540,7 @@ static int r_core_file_load_for_io_plugin(RCore *r, ut64 baseaddr, ut64 loadaddr
 }
 
 static bool try_loadlib(RCore *core, const char *lib, ut64 addr) {
+	eprintf("[try_loadlib]\n");
 	void *p = r_core_file_open (core, lib, 0, addr);
 	if (p) {
 		r_core_bin_load (core, lib, addr);
@@ -948,6 +950,7 @@ beach:
 
 R_API RIODesc *r_core_file_open_many(RCore *r, const char *file, int perm, ut64 loadaddr) {
 	RIODesc *fd;
+	eprintf("[r_core_file_open_many]\n");
 
 	RList *list_fds = r_io_open_many (r->io, file, perm, 0644);
 
@@ -1031,8 +1034,10 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 
 	r_io_use_fd (r->io, fd->fd);
 
+	eprintf("[r_core_file_open] setting up esil\n");
 	r_esil_setup (r->anal->esil, r->anal, 0, 0, false);
 	if (r_config_get_b (r->config, "cfg.debug")) {
+		eprintf("[r_core_file_open] cfg.debug set\n");
 		RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
 		const bool swstep = (plugin && plugin->canstep)? false: true;
 		r_config_set_b (r->config, "dbg.swstep", swstep);
@@ -1044,6 +1049,8 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 				free (dh);
 			}
 		}
+	} else {
+		eprintf("[r_core_file_open] cfg.debug unset\n");
 	}
 	// used by r_core_bin_load otherwise won't load correctly
 	// this should be argument of r_core_bin_load <shrug>
