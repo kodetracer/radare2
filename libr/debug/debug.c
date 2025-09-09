@@ -454,6 +454,7 @@ R_API void r_debug_free(RDebug *dbg) {
 
 R_API bool r_debug_attach(RDebug *dbg, int pid) {
 	R_RETURN_VAL_IF_FAIL (dbg, false);
+	eprintf("[debug.c] r_debug_attach: %d\n", pid);
 	if (pid < 0) {
 		return false;
 	}
