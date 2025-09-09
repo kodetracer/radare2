@@ -115,32 +115,41 @@ R_API RIODesc *r_io_desc_get_lowest(RIO *io) {
 
 R_API RIODesc *r_io_desc_open(RIO *io, const char *uri, int perm, int mode) {
 	R_RETURN_VAL_IF_FAIL (io && uri, NULL);
+	eprintf ("[r_io_desc_open] calling r_io_plugin_resolve\n");
 	RIOPlugin *plugin = r_io_plugin_resolve (io, uri, 0);
 	if (!plugin || !plugin->open) {
 		return NULL;
 	}
+	eprintf ("[r_io_desc_open] calling plugin->open\n");
 	RIODesc *desc = plugin->open (io, uri, perm, mode);
 	if (!desc) {
+		eprintf ("[r_io_desc_open] no desc\n");
 		return NULL;
 	}
 	// for none static callbacks, those that cannot use r_io_desc_new
 	if (!desc->name) {
+		eprintf ("[r_io_desc_open] setting name\n");
 		desc->name = strdup (uri);
 	}
 	if (!desc->uri) {
+		eprintf ("[r_io_desc_open] uri\n");
 		desc->uri = strdup (uri);
 	}
 	if (!desc->plugin) {
+		eprintf ("[r_io_desc_open] setting plugin\n");
 		desc->plugin = plugin;
 	}
 	if (!r_io_desc_add (io, desc)) {
+		eprintf ("[r_io_desc_open] failed to add desc\n");
 		r_io_desc_free (desc);
 		return NULL;
 	}
+	eprintf ("[r_io_desc_open] ok\n");
 	return desc;
 }
 
 R_API RIODesc *r_io_desc_open_plugin(RIO *io, RIOPlugin *plugin, const char *uri, int perm, int mode) {
+	eprintf ("[r_io_desc_open_plugin]\n");
 	R_RETURN_VAL_IF_FAIL (io && uri && plugin, NULL);
 	if (!plugin->open || !plugin->check || !plugin->check (io, uri, false)) {
 		return NULL;
