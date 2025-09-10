@@ -1459,7 +1459,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			}
 		}
 		if (!mr.debug || mr.debug == 2) {
-			if (opt.ind == argc && mr.pfile) {
+			if (opt.ind == argc && mr.pfile && strcmp (mr.debugbackend, "kode")) {
+
 				if (R_STR_ISEMPTY (mr.pfile)) {
 					R_LOG_ERROR ("Missing file to open");
 					ret = 1;
