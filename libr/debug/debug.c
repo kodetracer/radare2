@@ -103,11 +103,12 @@ static bool r_debug_bp_hit(RDebug *dbg, RRegItem *pc_ri, ut64 pc, RBreakpointIte
 			b = r_bp_get_at (dbg->bp, pc, dbg->pid);
 			if (!b) {
 				/* handle the case of hw breakpoints - notify the user */
-				int drx_reg_idx = r_debug_drx_get (dbg, pc);
-				if (drx_reg_idx != -1) {
-					R_LOG_INFO ("hit hardware breakpoint %d at: %" PFMT64x,
-						drx_reg_idx, pc);
-				}
+				// TODO: The r_debug_drx_get and the plugin->drx APIs are incompatible
+				// int drx_reg_idx = r_debug_drx_get (dbg, pc);
+				// if (drx_reg_idx != -1) {
+				// 	R_LOG_INFO ("hit hardware breakpoint %d at: %" PFMT64x,
+				// 		drx_reg_idx, pc);
+				// }
 				/* Couldn't find the break point. Nothing more to do... */
 				return true;
 			}
