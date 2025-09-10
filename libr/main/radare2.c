@@ -1323,6 +1323,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				return 1;
 			}
 			if (mr.debug == 2) {
+                eprintf("[radare2.c] checking sysgdb://\n");
 				if (strstr (mr.pfile, "sysgdb://")) {
 					free (mr.debugbackend);
 					mr.debugbackend = strdup ("io");
@@ -1335,7 +1336,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						mr.pfile = strdup (argv[opt.ind++]);
 					}
 					mr.perms = R_PERM_RX; // XXX. should work with rw too
-					mr.debug = 2;
+                    eprintf("[radare2.c] setting mr.debug = 2\n");
+                    mr.debug = 2;
 					if (!strstr (mr.pfile, "://")) {
 						opt.ind--; // take filename
 					}
@@ -1348,7 +1350,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						}
 					}
 #endif
-                    eprintf("[radare2.c] 1\n");
+                    eprintf("[radare2.c] 1 with debugbackend: %s\n", mr.debugbackend);
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 					mr.iod = (r->io && mr.fh) ? r_io_desc_get (r->io, mr.fh->fd) : NULL;
 					if (!strcmp (mr.debugbackend, "gdb")) {
@@ -1467,7 +1469,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 					ret = 1;
 					goto beach;
 				}
-                eprintf("[radare2.c] 2 with mr.debug: %d\n", mr.debug);
+                eprintf("[radare2.c] 2 with mr.debug: %d and debugbackend: %s\n", mr.debug, mr.debugbackend);
 				mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 				if (mr.fh) {
 					r_core_bin_load (r, mr.pfile, mr.baddr);
