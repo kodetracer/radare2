@@ -39,12 +39,12 @@ R_API void r_debug_bp_update(RDebug *dbg) {
 	}
 }
 
-R_API int r_debug_drx_get(RDebug *dbg, ut64 addr) {
+R_API bool r_debug_drx_get(RDebug *dbg, ut64 addr) {
 	RDebugPlugin *plugin = R_UNWRAP3 (dbg, current, plugin);
 	if (plugin && plugin->drx) {
 		return plugin->drx (dbg, 0, addr, 0, 0, 0, DRX_API_GET_BP);
 	}
-	return -1;
+	return false;
 }
 
 /*
@@ -103,11 +103,15 @@ static bool r_debug_bp_hit(RDebug *dbg, RRegItem *pc_ri, ut64 pc, RBreakpointIte
 			b = r_bp_get_at (dbg->bp, pc, dbg->pid);
 			if (!b) {
 				/* handle the case of hw breakpoints - notify the user */
-				int drx_reg_idx = r_debug_drx_get (dbg, pc);
-				if (drx_reg_idx != -1) {
-					R_LOG_INFO ("hit hardware breakpoint %d at: %" PFMT64x,
-						drx_reg_idx, pc);
+				if (r_debug_drx_get (dbg, pc)) {
+					R_LOG_INFO ("hit hardware breakpoint at: %" PFMT64x, pc);
 				}
+				// TODO: The r_debug_drx_get and the plugin->drx APIs are incompatible
+				// int drx_reg_idx = r_debug_drx_get (dbg, pc);
+				// if (drx_reg_idx != -1) {
+				// 	R_LOG_INFO ("hit hardware breakpoint %d at: %" PFMT64x,
+				// 		drx_reg_idx, pc);
+				// }
 				/* Couldn't find the break point. Nothing more to do... */
 				return true;
 			}

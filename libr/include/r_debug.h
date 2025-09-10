@@ -598,7 +598,7 @@ R_API int r_debug_child_clone(RDebug *dbg);
 
 R_API void r_debug_drx_list(RDebug *dbg);
 R_API bool r_debug_drx_set(RDebug *dbg, int idx, ut64 addr, int len, int rwx, int g);
-R_API int r_debug_drx_get(RDebug *dbg, ut64 addr);
+R_API bool r_debug_drx_get(RDebug *dbg, ut64 addr);
 R_API bool r_debug_drx_unset(RDebug *dbg, int idx);
 
 /* esil */
