@@ -1484,7 +1484,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
         RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
         eprintf("[radare2.c] line 1471 with plugin: %s\n", plugin->meta.name);
 		if (!mr.debug || mr.debug == 2) {
-			if (opt.ind == argc && mr.pfile && strcmp (mr.debugbackend, "kode")) {
+			// if (opt.ind == argc && mr.pfile && strcmp (mr.debugbackend, "kode")) {
+			if (opt.ind == argc && mr.pfile) {
 				if (R_STR_ISEMPTY (mr.pfile)) {
 					R_LOG_ERROR ("Missing file to open");
 					ret = 1;
