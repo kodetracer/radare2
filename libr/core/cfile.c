@@ -996,8 +996,17 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 	}
 	r->io->bits = r->rasm->config->bits; // TODO: we need an api for this
 
-	eprintf("[r_core_file_open]\n");
+    {
+        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+        eprintf("[r_core_file_open] with plugin: %s\n", plugin->meta.name);
+    }
+
 	RIODesc *fd = r_io_open_nomap (r->io, file, flags, 0644);
+    {
+        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+        eprintf("[r_core_file_open] post r_io_open_nomap with plugin: %s\n", plugin->meta.name);
+    }
+
 	if (r_cons_is_breaked (r->cons)) {
 		goto beach;
 	}
@@ -1033,7 +1042,10 @@ R_API RIODesc *r_core_file_open(RCore *r, const char *file, int flags, ut64 load
 	}
 
 	r_io_use_fd (r->io, fd->fd);
-
+    {
+        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+        eprintf("[r_core_file_open] pre setting up esil with plugin: %s\n", plugin->meta.name);
+    }
 	eprintf("[r_core_file_open] setting up esil\n");
 	r_esil_setup (r->anal->esil, r->anal, 0, 0, false);
 	if (r_config_get_b (r->config, "cfg.debug")) {
