@@ -1746,6 +1746,7 @@ R_API void r_core_file_reopen_remote_debug(RCore *core, char *uri, ut64 addr) {
 	desc->referer = desc->uri;
 	desc->uri = strdup (uri);
 
+    eprintf("[cmd_open.inc.c] r_core_file_reopen_remote_debug\n");
 	if ((file = r_core_file_open (core, uri, R_PERM_RW, addr))) {
 		fd = file->fd;
 		r_core_return_value (core, fd);
@@ -2430,6 +2431,7 @@ static int cmd_open(void *data, const char *input) {
 		}
 		{
 			const char *argv0 = argv ? argv[0] : ptr;
+            eprintf("[cmd_open.inc.c] o\n");
 			if ((file = r_core_file_open (core, argv0, perms, addr))) {
 				fd = file->fd;
 				r_core_return_value (core, fd);
@@ -2634,6 +2636,7 @@ static int cmd_open(void *data, const char *input) {
 			char *uri = r_str_newf ("malloc://%d", len);
 			ut8 *data = calloc (len, 1);
 			r_io_read_at (core->io, core->addr, data, len);
+            eprintf("[cmd_open.inc.c] o:\n");
 			if ((file = r_core_file_open (core, uri, R_PERM_RWX, 0))) {
 				fd = file->fd;
 				r_core_return_value (core, fd);
@@ -2840,6 +2843,7 @@ static int cmd_open(void *data, const char *input) {
 			r_core_fini (core);
 			r_core_init (core);
 			r_core_task_sync_begin (&core->tasks);
+            eprintf("[cmd_open.inc.c] oc");
 			if (r_core_file_open (core, input + 2, R_PERM_RX, 0)) {
 				(void)r_core_bin_load (core, NULL, baddr);
 			} else {
