@@ -1669,10 +1669,14 @@ R_API int r_main_radare2(int argc, const char **argv) {
 		}
 
 		mr.debug = r->io->desc && mr.iod && (r->io->desc->fd == mr.iod->fd) && mr.iod->plugin && mr.iod->plugin->isdbg;
+
 		if (mr.debug) {
-            eprintf("[radare2.c] r_core_setup_debugger\n");
+            // eprintf ("[debug.c] calling plugin->attach for plugin: %s\n", plugin->meta.name);
+            RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+            eprintf("[radare2.c] r_core_setup_debugger with plugin: %d\n", plugin->meta.name);
 			r_core_setup_debugger (r, mr.debugbackend, mr.baddr == UT64_MAX);
 		}
+
 		R_FREE (mr.debugbackend);
 		RBinObject *o = r_bin_cur_object (r->bin);
 		if (!mr.debug && o && !o->regstate) {
