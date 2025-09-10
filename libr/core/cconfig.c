@@ -1887,7 +1887,9 @@ static bool cb_dbgbackend(void *user, void *data) {
 	}
     {
         RDebugPlugin *plugin = R_UNWRAP3 (core->dbg, current, plugin);
-        eprintf("[cb_dbgbackend] pre r_debug_use name is: %s\n", plugin->meta.name);
+        if (plugin) {
+            eprintf("[cb_dbgbackend] pre r_debug_use name is: %s\n", plugin->meta.name);
+        }
     }
     eprintf("[cb_dbgbackend] calling r_debug_use with value: %s\n", node->value);
 	if (r_debug_use (core->dbg, node->value)) {
