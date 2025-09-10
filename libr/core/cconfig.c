@@ -1889,6 +1889,7 @@ static bool cb_dbgbackend(void *user, void *data) {
 		RDebugPlugin *plugin = R_UNWRAP3 (core->dbg, current, plugin);
 		if (plugin) {
 			const char *name = plugin->meta.name;
+            eprintf("[cb_dbgbackend] setting name to: %s\n", name);
 			// cmd_aei (core);
 			free (node->value);
 			node->value = strdup (name);
