@@ -1287,6 +1287,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 #endif
 		if (buf && sz > 0) {
 			char *path = r_str_newf ("malloc://%d", sz);
+            eprintf("[radare2.c] malloc\n");
 			mr.fh = r_core_file_open (r, path, mr.perms, mr.mapaddr);
 			if (!mr.fh) {
 				r_cons_flush ();
@@ -1360,6 +1361,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						}
 					}
 #endif
+                    eprintf("[radare2.c] 1\n");
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 					mr.iod = (r->io && mr.fh) ? r_io_desc_get (r->io, mr.fh->fd) : NULL;
 					if (!strcmp (mr.debugbackend, "gdb")) {
@@ -1479,6 +1481,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 					ret = 1;
 					goto beach;
 				}
+                eprintf("[radare2.c] 2\n");
 				mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 				if (mr.fh) {
 					r_core_bin_load (r, mr.pfile, mr.baddr);
@@ -1499,9 +1502,11 @@ R_API int r_main_radare2(int argc, const char **argv) {
 #else
 					mr.pfile = strdup (argv[opt.ind++]);
 #endif
-					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
+                    eprintf("[radare2.c] 3\n");
+                    mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 					if (!mr.fh && mr.perms & R_PERM_W) {
 						mr.perms |= R_PERM_CREAT;
+                        eprintf("[radare2.c] 4\n");
 						mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 					}
 					if (mr.perms & R_PERM_CREAT) {
@@ -1569,6 +1574,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 					mr.pfile = r_core_project_name (r, mr.project_name);
 					if (mr.pfile) {
 						if (!mr.fh) {
+                            eprintf("[radare2.c] 5\n");
 							mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 						}
 						// load_bin = LOAD_BIN_NOTHING;
@@ -1594,6 +1600,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				r_core_cmd0 (r, ".ies*");
 			}
 		} else if (mr.pfile) {
+            eprintf("[radare2.c] 5\n");
 			RIODesc *f = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 			if (f) {
 				mr.fh = f;
