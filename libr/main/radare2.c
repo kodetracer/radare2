@@ -1311,6 +1311,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			mr.debug = 2;
 		}
 		if (mr.debug) {
+            RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
 			if (mr.asmbits) {
 				r_config_set (r->config, "asm.bits", mr.asmbits);
 			}
@@ -1348,7 +1349,9 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						}
 					}
 #endif
-                    eprintf("[radare2.c] 1 with debugbackend: %s\n", mr.debugbackend);
+
+                    eprintf("[radare2.c] 1 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
+
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 					mr.iod = (r->io && mr.fh) ? r_io_desc_get (r->io, mr.fh->fd) : NULL;
 					if (!strcmp (mr.debugbackend, "gdb")) {
