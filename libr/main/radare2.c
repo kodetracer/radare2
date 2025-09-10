@@ -1354,8 +1354,10 @@ R_API int r_main_radare2(int argc, const char **argv) {
 
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 
-                    // RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
-                    eprintf("[radare2.c] post r_core_file_open with plugin: %s\n", plugin->meta.name);
+                    {
+                        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+                        eprintf("[radare2.c] post r_core_file_open with plugin: %s\n", plugin->meta.name);
+                    }
 
 					mr.iod = (r->io && mr.fh) ? r_io_desc_get (r->io, mr.fh->fd) : NULL;
 					if (!strcmp (mr.debugbackend, "gdb")) {
@@ -1398,6 +1400,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 							}
 						}
 					}
+                    eprintf("[radare2.c] line 1401 with plugin: %s\n", plugin->meta.name);
 				}
 			} else {
 				char *f = (mr.haveRarunProfile && mr.pfile)? strdup (mr.pfile): strdup (argv[opt.ind]);
@@ -1626,7 +1629,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			}
 			r_cons_reset (r->cons);
 		}
-        eprintf("[radare2.c] line 1630 with plugin: %s\n", plugin->meta.name);
 		if (!mr.pfile) {
 			mr.pfile = mr.file;
 		}
