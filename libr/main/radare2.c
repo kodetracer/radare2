@@ -1673,7 +1673,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 		if (mr.debug) {
             // eprintf ("[debug.c] calling plugin->attach for plugin: %s\n", plugin->meta.name);
             RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
-            eprintf("[radare2.c] r_core_setup_debugger with plugin: %d\n", plugin->meta.name);
+            eprintf("[radare2.c] r_core_setup_debugger with plugin: %s\n", plugin->meta.name);
 			r_core_setup_debugger (r, mr.debugbackend, mr.baddr == UT64_MAX);
 		}
 
