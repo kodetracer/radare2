@@ -1475,6 +1475,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				if (mr.fh) {
 					r_core_bin_load (r, mr.pfile, mr.baddr);
 				}
+                RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+                eprintf("[radare2.c] post r_core_bin_load() with plugin: %s\n", plugin->meta.name);
 			}
 			if (opt.ind < argc) {
                 eprintf("[radare2.c] opt.ind < arc)\n");
@@ -1674,7 +1676,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 		mr.debug = r->io->desc && mr.iod && (r->io->desc->fd == mr.iod->fd) && mr.iod->plugin && mr.iod->plugin->isdbg;
 
 		if (mr.debug) {
-            // eprintf ("[debug.c] calling plugin->attach for plugin: %s\n", plugin->meta.name);
             RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
             eprintf("[radare2.c] r_core_setup_debugger with plugin: %s\n", plugin->meta.name);
 			r_core_setup_debugger (r, mr.debugbackend, mr.baddr == UT64_MAX);
