@@ -1353,6 +1353,10 @@ R_API int r_main_radare2(int argc, const char **argv) {
                     eprintf("[radare2.c] 1 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
 
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
+
+                    // RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+                    eprintf("[radare2.c] post r_core_file_open with plugin: %s\n", plugin->meta.name);
+
 					mr.iod = (r->io && mr.fh) ? r_io_desc_get (r->io, mr.fh->fd) : NULL;
 					if (!strcmp (mr.debugbackend, "gdb")) {
 						const char *filepath = r_config_get (r->config, "dbg.exe.path");
