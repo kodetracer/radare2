@@ -1467,6 +1467,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				}
 			}
 		}
+        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+        eprintf("[radare2.c] line 1471 with plugin: %s\n", plugin->meta.name);
 		if (!mr.debug || mr.debug == 2) {
 			if (opt.ind == argc && mr.pfile && strcmp (mr.debugbackend, "kode")) {
 				if (R_STR_ISEMPTY (mr.pfile)) {
@@ -1479,8 +1481,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				if (mr.fh) {
 					r_core_bin_load (r, mr.pfile, mr.baddr);
 				}
-                RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
-                eprintf("[radare2.c] post r_core_bin_load() with plugin: %s\n", plugin->meta.name);
 			}
 			if (opt.ind < argc) {
                 eprintf("[radare2.c] opt.ind < arc)\n");
@@ -1626,6 +1626,8 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			}
 			r_cons_reset (r->cons);
 		}
+        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+        eprintf("[radare2.c] line 1630 with plugin: %s\n", plugin->meta.name);
 		if (!mr.pfile) {
 			mr.pfile = mr.file;
 		}
