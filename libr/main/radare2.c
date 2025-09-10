@@ -1311,7 +1311,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			mr.debug = 2;
 		}
 		if (mr.debug) {
-            RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
 			if (mr.asmbits) {
 				r_config_set (r->config, "asm.bits", mr.asmbits);
 			}
@@ -1328,6 +1327,11 @@ R_API int r_main_radare2(int argc, const char **argv) {
 					free (mr.debugbackend);
 					mr.debugbackend = strdup ("io");
 				}
+                {
+                    RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+
+                    eprintf("[radare2.c] line 1333 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
+                }
 				// autodetect backend with -D when it's not native or esil
 				r_config_set (r->config, "dbg.backend", mr.debugbackend);
 				if (strcmp (mr.debugbackend, "native") && strcmp (mr.debugbackend, "esil")) {
@@ -1349,8 +1353,11 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						}
 					}
 #endif
+                    {
+                        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
 
-                    eprintf("[radare2.c] 1 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
+                        eprintf("[radare2.c] 1 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
+                    }
 
 					mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 
@@ -1400,7 +1407,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 							}
 						}
 					}
-                    eprintf("[radare2.c] line 1401 with plugin: %s\n", plugin->meta.name);
 				}
 			} else {
 				char *f = (mr.haveRarunProfile && mr.pfile)? strdup (mr.pfile): strdup (argv[opt.ind]);
