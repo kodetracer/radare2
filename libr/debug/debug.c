@@ -460,7 +460,9 @@ R_API bool r_debug_attach(RDebug *dbg, int pid) {
 	}
 	bool ret = false;
 	RDebugPlugin *plugin = R_UNWRAP3 (dbg, current, plugin);
+
 	if (plugin && plugin->attach) {
+		eprintf("[debug.c] calling plugin->attach for plugin: %s\n", plugin->meta.name);
 		ret = plugin->attach (dbg, pid);
 		if (ret) {
 			// dbg->tid = pid;
