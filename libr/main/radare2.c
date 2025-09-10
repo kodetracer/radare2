@@ -1335,7 +1335,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 						mr.pfile = strdup (argv[opt.ind++]);
 					}
 					mr.perms = R_PERM_RX; // XXX. should work with rw too
-                    eprintf("[radare2.c] setting mr.debug = 2\n");
                     mr.debug = 2;
 					if (!strstr (mr.pfile, "://")) {
 						opt.ind--; // take filename
@@ -1475,6 +1474,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 				}
 			}
 			if (opt.ind < argc) {
+                eprintf("[radare2.c] opt.ind < arc)\n");
 				R_FREE (mr.pfile);
 				while (opt.ind < argc) {
 					R_FREE (mr.pfile);
@@ -1670,6 +1670,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 
 		mr.debug = r->io->desc && mr.iod && (r->io->desc->fd == mr.iod->fd) && mr.iod->plugin && mr.iod->plugin->isdbg;
 		if (mr.debug) {
+            eprintf("[radare2.c] r_core_setup_debugger\n");
 			r_core_setup_debugger (r, mr.debugbackend, mr.baddr == UT64_MAX);
 		}
 		R_FREE (mr.debugbackend);
