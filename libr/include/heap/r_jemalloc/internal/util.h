@@ -84,7 +84,9 @@
 #  error JEMALLOC_INTERNAL_UNREACHABLE should have been defined by configure
 #endif
 
-#define unreachable() JEMALLOC_INTERNAL_UNREACHABLE()
+#if !defined(unreachable)
+	#define unreachable() JEMALLOC_INTERNAL_UNREACHABLE()
+#endif
 
 #include "assert.h"
 
