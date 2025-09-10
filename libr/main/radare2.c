@@ -1334,6 +1334,11 @@ R_API int r_main_radare2(int argc, const char **argv) {
                 }
 				// autodetect backend with -D when it's not native or esil
 				r_config_set (r->config, "dbg.backend", mr.debugbackend);
+                {
+                    RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
+
+                    eprintf("[radare2.c] line 1340 with debugbackend: %s and with plugin: %s\n", mr.debugbackend, plugin->meta.name);
+                }
 				if (strcmp (mr.debugbackend, "native") && strcmp (mr.debugbackend, "esil")) {
 					if (!mr.haveRarunProfile) {
 						free (mr.pfile);
