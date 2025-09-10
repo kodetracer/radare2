@@ -1467,7 +1467,7 @@ R_API int r_main_radare2(int argc, const char **argv) {
 					ret = 1;
 					goto beach;
 				}
-                eprintf("[radare2.c] 2\n");
+                eprintf("[radare2.c] 2 with mr.debug: %d\n", mr.debug);
 				mr.fh = r_core_file_open (r, mr.pfile, mr.perms, mr.mapaddr);
 				if (mr.fh) {
 					r_core_bin_load (r, mr.pfile, mr.baddr);
