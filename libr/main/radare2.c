@@ -1626,7 +1626,6 @@ R_API int r_main_radare2(int argc, const char **argv) {
 			}
 			r_cons_reset (r->cons);
 		}
-        RDebugPlugin *plugin = R_UNWRAP3 (r->dbg, current, plugin);
         eprintf("[radare2.c] line 1630 with plugin: %s\n", plugin->meta.name);
 		if (!mr.pfile) {
 			mr.pfile = mr.file;
