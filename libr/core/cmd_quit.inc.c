@@ -19,6 +19,7 @@ static int cmd_Quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
 	const char *arg = strchr (input, ' ');
 	unsigned int exclamations = 0;
+	eprintf("[cmd_Quit]\n");
 	if (!arg) {
 		while (*input == '!') {
 			if (exclamations < 4) {
@@ -45,6 +46,7 @@ static int cmd_Quit(void *data, const char *input) {
 
 static int cmd_quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
+	eprintf("[cmd_quit]\n");
 	if (input)
 	switch (*input) {
 	case '?':
