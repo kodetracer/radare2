@@ -17,6 +17,7 @@ static RCoreHelpMessage help_msg_q = {
 
 static int cmd_Quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
+	core->num->value = 1;
 	const char *arg = strchr (input, ' ');
 	unsigned int exclamations = 0;
 	if (!arg) {
