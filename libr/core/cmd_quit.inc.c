@@ -15,6 +15,7 @@ static RCoreHelpMessage help_msg_q = {
 	NULL
 };
 
+// if this is called from Q, then there are no exclamations
 static int cmd_Quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
 	const char *arg = strchr (input, ' ');
@@ -30,8 +31,9 @@ static int cmd_Quit(void *data, const char *input) {
 		arg = input;
 	}
 	const int rv = arg? r_num_math (core->num, arg): 0;
-	eprintf("[cmd_Quit] exclamations: %d\n");
-	eprintf("[cmd_Quit] rv: %d\n");
+	eprintf("[cmd_Quit] exclamations: %d\n", exclamations);
+	eprintf("[cmd_Quit] rv: %d\n", rv);
+	eprintf("[cmd_Quit] arg (new): %s\n", rv);
 	if (exclamations > 0) { // "q!"
 		r_config_set_b (core->config, "scr.hist.save", false);
 		if (exclamations > 1) {
