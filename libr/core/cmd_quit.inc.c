@@ -19,7 +19,7 @@ static int cmd_Quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
 	const char *arg = strchr (input, ' ');
 	unsigned int exclamations = 0;
-	eprintf("[cmd_Quit]\n");
+	eprintf("[cmd_Quit] arg: %s, input: %s\n", arg, input);
 	if (!arg) {
 		while (*input == '!') {
 			if (exclamations < 4) {
@@ -30,12 +30,17 @@ static int cmd_Quit(void *data, const char *input) {
 		arg = input;
 	}
 	const int rv = arg? r_num_math (core->num, arg): 0;
+	eprintf("[cmd_Quit] exclamations: %d\n");
+	eprintf("[cmd_Quit] rv: %d\n");
 	if (exclamations > 0) { // "q!"
 		r_config_set_b (core->config, "scr.hist.save", false);
 		if (exclamations > 1) {
 			if (!r_sandbox_enable (false)) {
+				eprintf("[cmd_Quit] flush and exit\n");
 				r_cons_flush (core->cons);
 				exit (rv);
+			} else {
+				eprintf("[cmd_Quit] sandbox_enable\n");
 			}
 			return R_CMD_RC_QUIT;
 		}
@@ -46,7 +51,6 @@ static int cmd_Quit(void *data, const char *input) {
 
 static int cmd_quit(void *data, const char *input) {
 	RCore *core = (RCore *)data;
-	eprintf("[cmd_quit]\n");
 	if (input)
 	switch (*input) {
 	case '?':
